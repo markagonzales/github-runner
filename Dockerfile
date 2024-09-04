@@ -7,6 +7,7 @@ ENV GITHUB_REPOSITORY ""
 ENV RUNNER_WORKDIR "_work"
 ENV RUNNER_LABELS ""
 ENV ADDITIONAL_PACKAGES ""
+ENV GH_RUNNER_VERSION="2.319.1"
 
 RUN apt-get update \
     && apt-get install -y \
@@ -15,20 +16,24 @@ RUN apt-get update \
         git \
         jq \
         iputils-ping \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
     && useradd -m github \
     && usermod -aG sudo github \
     && echo "%sudo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-USER github
 WORKDIR /home/github
 
-RUN GITHUB_RUNNER_VERSION=$(curl --silent "https://api.github.com/repos/actions/runner/releases/latest" | jq -r '.tag_name[1:]') \
-    && curl -Ls https://github.com/actions/runner/releases/download/v${GITHUB_RUNNER_VERSION}/actions-runner-linux-x64-${GITHUB_RUNNER_VERSION}.tar.gz | tar xz \
-    && sudo ./bin/installdependencies.sh
+RUN GH_RUNNER_VERSION=$GH_RUNNER_VERSION \
+    && curl -L -O https://github.com/actions/runner/releases/download/v${GH_RUNNER_VERSION}/actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz \
+    && tar -zxf actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz \
+    && rm -f actions-runner-linux-x64-${GH_RUNNER_VERSION}.tar.gz \
+    && ./bin/installdependencies.sh \
+    && chown -R github: /home/github \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /tmp/* \
+    && apt-get clean
 
-COPY --chown=github:github entrypoint.sh runsvc.sh ./
-RUN sudo chmod u+x ./entrypoint.sh ./runsvc.sh
+COPY entrypoint.sh /home/github/entrypoint.sh
+RUN chmod +x /home/github/entrypoint.sh
 
+USER github
 ENTRYPOINT ["/home/github/entrypoint.sh"]
