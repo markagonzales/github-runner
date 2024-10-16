@@ -18,6 +18,8 @@ RUN apt-get update \
         iputils-ping \
     && useradd -m github \
     && usermod -aG sudo github \
+    && curl -L -o /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 \
+    && chmod +x /usr/bin/yq \
     && echo "%sudo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 WORKDIR /home/github
