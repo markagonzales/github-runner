@@ -1,13 +1,11 @@
 FROM debian:buster-slim
 
-ENV GITHUB_PAT ""
-ENV GITHUB_TOKEN ""
-ENV GITHUB_OWNER ""
-ENV GITHUB_REPOSITORY ""
-ENV RUNNER_WORKDIR "_work"
-ENV RUNNER_LABELS ""
-ENV ADDITIONAL_PACKAGES ""
-ENV GH_RUNNER_VERSION="2.319.1"
+ENV GITHUB_OWNER=""
+ENV GITHUB_REPOSITORY=""
+ENV RUNNER_WORKDIR="_work"
+ENV RUNNER_LABELS=""
+ENV ADDITIONAL_PACKAGES=""
+ENV GH_RUNNER_VERSION="2.320.0"
 
 RUN apt-get update \
     && apt-get install -y \
@@ -18,6 +16,8 @@ RUN apt-get update \
         iputils-ping \
     && useradd -m github \
     && usermod -aG sudo github \
+    && curl -L -o /usr/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 \
+    && chmod +x /usr/bin/yq \
     && echo "%sudo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 WORKDIR /home/github
