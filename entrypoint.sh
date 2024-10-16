@@ -33,7 +33,20 @@ export RUNNER_TOKEN=$(echo $payload | jq .token --raw-output)
     --replace
 
 remove() {
-    ./config.sh remove --unattended --token "${RUNNER_TOKEN}"
+
+    RUNNER_ID=$(curl --silent -L \
+    -H "Accept: application/vnd.github+json" \
+    -H "Authorization: Bearer ${GITHUB_PAT}" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    https://api.github.com/orgs/$GITHUB_OWNER/actions/runners \
+    | yq ".runners[] | select(.name == \"$(hostname)\").id")
+
+    curl -L \
+    -X DELETE \
+    -H "Accept: application/vnd.github+json" \
+    -H "Authorization: Bearer ${GITHUB_PAT}" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    https://api.github.com/orgs/$GITHUB_OWNER/actions/runners/$RUNNER_ID
 }
 
 trap 'remove; exit 130' INT
